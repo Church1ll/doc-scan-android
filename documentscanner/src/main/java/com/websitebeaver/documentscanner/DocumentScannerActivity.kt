@@ -66,6 +66,10 @@ class DocumentScannerActivity : AppCompatActivity() {
      */
     private val documents = mutableListOf<Document>()
 
+    private lateinit var originalPhoto: Bitmap;
+
+    private lateinit var _originalPhotoPath: String;
+
     /**
      * @property cameraUtil gets called with photo file path once user takes photo, or
      * exits camera
@@ -86,6 +90,8 @@ class DocumentScannerActivity : AppCompatActivity() {
 
             // get bitmap from photo file path
             val photo: Bitmap = ImageUtil().getImageFromFilePath(originalPhotoPath)
+            originalPhoto = photo;
+            _originalPhotoPath = originalPhotoPath;
 
             // get document corners by detecting them, or falling back to photo corners with
             // slight margin if we can't find the corners
@@ -230,12 +236,14 @@ class DocumentScannerActivity : AppCompatActivity() {
         // set click event handlers for new document button, accept and crop document button,
         // and retake document photo button
         val newPhotoButton: ImageButton = findViewById(R.id.new_photo_button)
+        val fullPhotoButton: ImageButton = findViewById(R.id.full_image_button)
         val completeDocumentScanButton: ImageButton = findViewById(
             R.id.complete_document_scan_button
         )
         val retakePhotoButton: ImageButton = findViewById(R.id.retake_photo_button)
 
         newPhotoButton.onClick { onClickNew() }
+        fullPhotoButton.onClick { setCornersToFullImage(originalPhoto) }
         completeDocumentScanButton.onClick { onClickDone() }
         retakePhotoButton.onClick { onClickRetake() }
 
@@ -279,6 +287,33 @@ class DocumentScannerActivity : AppCompatActivity() {
                 -cropperOffsetWhenCornersNotFound
             )
         )
+    }
+
+    private fun setCornersToFullImage(photo: Bitmap) {
+        println("SOMEHTING TO BE SEEN")
+        val corners = try {
+            val (topLeft, topRight, bottomLeft, bottomRight) = listOf(
+                Point(0.0, 0.0),
+                Point(photo.width.toDouble(), 0.0),
+                Point(0.0, photo.height.toDouble()),
+                Point(photo.width.toDouble(), photo.height.toDouble())
+            )
+            Quad(topLeft, topRight, bottomRight, bottomLeft)
+        } catch (exception: Exception) {
+            finishIntentWithError(
+                "unable to get document corners: ${exception.message}"
+            )
+        }
+        document = Document(_originalPhotoPath, photo.width, photo.height, corners as Quad)
+        val cornersInImagePreviewCoordinates = corners
+            .mapOriginalToPreviewImageCoordinates(
+                imageView.imagePreviewBounds,
+                imageView.imagePreviewBounds.height() / photo.height
+            )
+
+        // display cropper, and allow user to move corners
+        imageView.setCropper(cornersInImagePreviewCoordinates)
+        imageView.invalidate()
     }
 
     /**
