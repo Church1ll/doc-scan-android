@@ -50,7 +50,7 @@ dependencies {
 publishing {
     publications {
         release(MavenPublication) {
-            groupId = "io.github.church1ll"
+            groupId = "com.church1ll"
             artifactId = "documentscannermod"
             version = "1.0.0"
 
@@ -86,23 +86,12 @@ publishing {
 
     repositories {
         maven {
-            name = "mavencentral"
-            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Church1ll/doc-scan-android")
             credentials {
-                username findProperty("ossrhUsername")
-                password findProperty("ossrhPassword")
+                username = 'xxx' // Github username
+                password = 'xxx' //generate personal access token (classic) with write access
             }
         }
-    }
-}
-
-signing {
-    useGpg()
-    sign publishing.publications.release
-    gpg {
-        keyFile = file('C:/public.key')
     }
 }
